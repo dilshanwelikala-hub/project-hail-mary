@@ -24,6 +24,10 @@ CREATE TABLE IF NOT EXISTS tasks (
   updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Add new columns if upgrading from v1
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS assigned_to INT REFERENCES users(id) ON DELETE SET NULL;
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS created_by  INT REFERENCES users(id) ON DELETE SET NULL;
+
 -- Auto-update updated_at
 CREATE OR REPLACE FUNCTION set_updated_at()
 RETURNS TRIGGER AS $$

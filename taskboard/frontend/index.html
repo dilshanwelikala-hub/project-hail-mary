@@ -544,6 +544,11 @@
     const res   = await fetch(`${API}/api/tasks`, { headers: authHeaders() });
     const tasks = await res.json();
 
+    if (!res.ok || !Array.isArray(tasks)) {
+      console.error('Failed to load tasks:', tasks);
+      return;
+    }
+
     const cols = { todo: [], 'in-progress': [], done: [] };
     tasks.forEach(t => { if (cols[t.status]) cols[t.status].push(t); });
 
