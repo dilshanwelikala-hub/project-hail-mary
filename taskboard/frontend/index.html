@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TaskBoard</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      color: #1a1a2e;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #1a1a2e;
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    header h1 { font-size: 1.4rem; letter-spacing: 1px; }
+
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      padding: 0.5rem 1rem;
+    }
+
+    #add-btn {
+      background: #4f8ef7;
+      color: white;
+      font-weight: 600;
+    }
+
+    #add-btn:hover { background: #3a7ae0; }
+
+    /* Board */
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.2rem;
+      padding: 1.5rem 2rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .column {
+      background: #e4e7ed;
+      border-radius: 10px;
+      padding: 1rem;
+      min-height: 300px;
+    }
+
+    .column-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      font-weight: 700;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .dot-todo       { background: #94a3b8; }
+    .dot-inprogress { background: #f59e0b; }
+    .dot-done       { background: #22c55e; }
+
+    .count {
+      background: #c8cdd6;
+      border-radius: 10px;
+      padding: 1px 7px;
+      font-size: 0.8rem;
+      margin-left: auto;
+    }
+
+    /* Cards */
+    .card {
+      background: white;
+      border-radius: 8px;
+      padding: 0.9rem 1rem;
+      margin-bottom: 0.75rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      transition: box-shadow 0.15s;
+    }
+
+    .card:hover { box-shadow: 0 3px 10px rgba(0,0,0,0.12); }
+
+    .card-title {
+      font-weight: 600;
+      font-size: 0.95rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .card-desc {
+      font-size: 0.82rem;
+      color: #6b7280;
+      margin-bottom: 0.75rem;
+      line-height: 1.4;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+
+    .card-actions button {
+      font-size: 0.75rem;
+      padding: 0.3rem 0.6rem;
+    }
+
+    .btn-move  { background: #eff6ff; color: #3b82f6; }
+    .btn-move:hover  { background: #dbeafe; }
+    .btn-delete { background: #fff1f2; color: #ef4444; }
+    .btn-delete:hover { background: #fee2e2; }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+
+    .modal h2 { margin-bottom: 1rem; font-size: 1.1rem; }
+
+    .modal label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+      color: #374151;
+    }
+
+    .modal input,
+    .modal textarea,
+    .modal select {
+      width: 100%;
+      padding: 0.55rem 0.75rem;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+      font-family: inherit;
+    }
+
+    .modal textarea { resize: vertical; min-height: 80px; }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .btn-cancel { background: #f3f4f6; color: #374151; }
+    .btn-cancel:hover { background: #e5e7eb; }
+    .btn-save   { background: #4f8ef7; color: white; font-weight: 600; }
+    .btn-save:hover { background: #3a7ae0; }
+
+    .empty { text-align: center; color: #9ca3af; font-size: 0.85rem; padding: 2rem 0; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>📋 TaskBoard</h1>
+  <button id="add-btn">+ New Task</button>
+</header>
+
+<div class="board">
+  <div class="column" id="col-todo">
+    <div class="column-header">
+      <span class="dot dot-todo"></span> To Do
+      <span class="count" id="count-todo">0</span>
+    </div>
+    <div class="cards" id="cards-todo"></div>
+  </div>
+
+  <div class="column" id="col-inprogress">
+    <div class="column-header">
+      <span class="dot dot-inprogress"></span> In Progress
+      <span class="count" id="count-inprogress">0</span>
+    </div>
+    <div class="cards" id="cards-inprogress"></div>
+  </div>
+
+  <div class="column" id="col-done">
+    <div class="column-header">
+      <span class="dot dot-done"></span> Done
+      <span class="count" id="count-done">0</span>
+    </div>
+    <div class="cards" id="cards-done"></div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2 id="modal-title">New Task</h2>
+    <label>Title</label>
+    <input type="text" id="input-title" placeholder="Task title" />
+    <label>Description</label>
+    <textarea id="input-desc" placeholder="Optional description"></textarea>
+    <label>Status</label>
+    <select id="input-status">
+      <option value="todo">To Do</option>
+      <option value="in-progress">In Progress</option>
+      <option value="done">Done</option>
+    </select>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="modal-cancel">Cancel</button>
+      <button class="btn-save"   id="modal-save">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API = 'http://localhost:3000';  // ← replace with your Render URL before deploying
+
+  let editingId = null;
+
+  // ── Fetch & render ────────────────────────────────────────
+  async function loadTasks() {
+    const res = await fetch(`${API}/api/tasks`);
+    const tasks = await res.json();
+
+    const cols = { todo: [], 'in-progress': [], done: [] };
+    tasks.forEach(t => {
+      if (cols[t.status] !== undefined) cols[t.status].push(t);
+    });
+
+    renderCol('todo',       cols['todo']);
+    renderCol('inprogress', cols['in-progress']);
+    renderCol('done',       cols['done']);
+  }
+
+  function renderCol(key, tasks) {
+    const container = document.getElementById(`cards-${key}`);
+    const count     = document.getElementById(`count-${key}`);
+    count.textContent = tasks.length;
+
+    if (tasks.length === 0) {
+      container.innerHTML = '<p class="empty">No tasks here</p>';
+      return;
+    }
+
+    container.innerHTML = tasks.map(t => `
+      <div class="card">
+        <div class="card-title">${esc(t.title)}</div>
+        ${t.description ? `<div class="card-desc">${esc(t.description)}</div>` : ''}
+        <div class="card-actions">
+          ${moveButtons(t)}
+          <button class="btn-move" onclick="openEdit(${t.id})">Edit</button>
+          <button class="btn-delete" onclick="deleteTask(${t.id})">Delete</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function moveButtons(task) {
+    const next = { todo: 'in-progress', 'in-progress': 'done' };
+    const prev = { 'in-progress': 'todo', done: 'in-progress' };
+    let btns = '';
+    if (prev[task.status]) btns += `<button class="btn-move" onclick="moveTask(${task.id},'${prev[task.status]}')">← Back</button>`;
+    if (next[task.status]) btns += `<button class="btn-move" onclick="moveTask(${task.id},'${next[task.status]}')">→ Move</button>`;
+    return btns;
+  }
+
+  // ── Actions ───────────────────────────────────────────────
+  async function moveTask(id, status) {
+    await fetch(`${API}/api/tasks/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    });
+    loadTasks();
+  }
+
+  async function deleteTask(id) {
+    if (!confirm('Delete this task?')) return;
+    await fetch(`${API}/api/tasks/${id}`, { method: 'DELETE' });
+    loadTasks();
+  }
+
+  // ── Modal ─────────────────────────────────────────────────
+  function openAdd() {
+    editingId = null;
+    document.getElementById('modal-title').textContent = 'New Task';
+    document.getElementById('input-title').value  = '';
+    document.getElementById('input-desc').value   = '';
+    document.getElementById('input-status').value = 'todo';
+    document.getElementById('modal').classList.add('open');
+  }
+
+  async function openEdit(id) {
+    const res  = await fetch(`${API}/api/tasks/${id}`);
+    const task = await res.json();
+    editingId  = id;
+    document.getElementById('modal-title').textContent   = 'Edit Task';
+    document.getElementById('input-title').value         = task.title;
+    document.getElementById('input-desc').value          = task.description || '';
+    document.getElementById('input-status').value        = task.status;
+    document.getElementById('modal').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('modal').classList.remove('open');
+  }
+
+  async function saveTask() {
+    const title       = document.getElementById('input-title').value.trim();
+    const description = document.getElementById('input-desc').value.trim();
+    const status      = document.getElementById('input-status').value;
+
+    if (!title) { alert('Title is required'); return; }
+
+    if (editingId) {
+      await fetch(`${API}/api/tasks/${editingId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, description, status }),
+      });
+    } else {
+      await fetch(`${API}/api/tasks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, description, status }),
+      });
+    }
+
+    closeModal();
+    loadTasks();
+  }
+
+  // ── Helpers ───────────────────────────────────────────────
+  function esc(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ── Event listeners ───────────────────────────────────────
+  document.getElementById('add-btn').addEventListener('click', openAdd);
+  document.getElementById('modal-cancel').addEventListener('click', closeModal);
+  document.getElementById('modal-save').addEventListener('click', saveTask);
+
+  // ── Init ──────────────────────────────────────────────────
+  loadTasks();
+</script>
+
+</body>
+</html>
