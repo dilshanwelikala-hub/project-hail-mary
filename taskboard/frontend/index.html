@@ -14,67 +14,214 @@
       min-height: 100vh;
     }
 
-    header {
-      background: #1a1a2e;
-      color: white;
-      padding: 1rem 2rem;
+    /* ── Auth screen ── */
+    #auth-screen {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: center;
+      min-height: 100vh;
+      background: #1a1a2e;
     }
 
-    header h1 { font-size: 1.4rem; letter-spacing: 1px; }
+    .auth-box {
+      background: white;
+      border-radius: 14px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
 
-    button {
-      cursor: pointer;
-      border: none;
+    .auth-box h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
+    .auth-box p  { color: #6b7280; font-size: 0.88rem; margin-bottom: 1.5rem; }
+
+    .auth-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .auth-tab {
+      flex: 1;
+      padding: 0.5rem;
+      border: 1px solid #d1d5db;
       border-radius: 6px;
-      font-size: 0.9rem;
-      padding: 0.5rem 1rem;
+      background: white;
+      cursor: pointer;
+      font-size: 0.88rem;
+      color: #6b7280;
     }
 
-    #add-btn {
-      background: #4f8ef7;
+    .auth-tab.active {
+      background: #1a1a2e;
       color: white;
+      border-color: #1a1a2e;
       font-weight: 600;
     }
 
-    #add-btn:hover { background: #3a7ae0; }
+    label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 0.3rem;
+    }
 
-    /* Board */
+    input, select, textarea {
+      width: 100%;
+      padding: 0.6rem 0.75rem;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      margin-bottom: 0.9rem;
+      font-family: inherit;
+      background: white;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #4f8ef7;
+      box-shadow: 0 0 0 3px rgba(79,142,247,0.15);
+    }
+
+    textarea { resize: vertical; min-height: 75px; }
+
+    button { cursor: pointer; border: none; border-radius: 6px; font-family: inherit; }
+
+    .btn-primary {
+      width: 100%;
+      padding: 0.7rem;
+      background: #4f8ef7;
+      color: white;
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .btn-primary:hover { background: #3a7ae0; }
+
+    .auth-error {
+      color: #ef4444;
+      font-size: 0.82rem;
+      margin-bottom: 0.75rem;
+      display: none;
+    }
+
+    /* ── App screen ── */
+    #app-screen { display: none; }
+
+    header {
+      background: #1a1a2e;
+      color: white;
+      padding: 0.85rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    header h1 { font-size: 1.2rem; flex: 1; }
+
+    .user-badge {
+      font-size: 0.82rem;
+      background: rgba(255,255,255,0.1);
+      padding: 0.3rem 0.75rem;
+      border-radius: 20px;
+    }
+
+    .role-chip {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+    }
+
+    .role-lead   { background: #fef3c7; color: #92400e; }
+    .role-member { background: #dbeafe; color: #1e40af; }
+
+    .btn-logout {
+      background: rgba(255,255,255,0.1);
+      color: white;
+      padding: 0.35rem 0.75rem;
+      font-size: 0.82rem;
+    }
+
+    .btn-logout:hover { background: rgba(255,255,255,0.2); }
+
+    /* ── Lead stats ── */
+    .stats {
+      display: flex;
+      gap: 1rem;
+      padding: 1.25rem 1.5rem 0;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      flex: 1;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+    }
+
+    .stat-card .num  { font-size: 1.8rem; font-weight: 700; }
+    .stat-card .lbl  { font-size: 0.78rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .num-todo       { color: #94a3b8; }
+    .num-inprogress { color: #f59e0b; }
+    .num-done       { color: #22c55e; }
+
+    /* ── Board ── */
+    .board-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.25rem 1.5rem 0.5rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .board-header h2 { font-size: 1rem; color: #374151; }
+
+    .btn-new {
+      background: #4f8ef7;
+      color: white;
+      padding: 0.5rem 1rem;
+      font-size: 0.88rem;
+      font-weight: 600;
+    }
+
+    .btn-new:hover { background: #3a7ae0; }
+
     .board {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 1.2rem;
-      padding: 1.5rem 2rem;
-      max-width: 1100px;
+      gap: 1rem;
+      padding: 0.75rem 1.5rem 2rem;
+      max-width: 1200px;
       margin: 0 auto;
     }
 
     .column {
       background: #e4e7ed;
       border-radius: 10px;
-      padding: 1rem;
-      min-height: 300px;
+      padding: 0.9rem;
+      min-height: 250px;
     }
 
     .column-header {
       display: flex;
       align-items: center;
       gap: 0.5rem;
-      margin-bottom: 1rem;
+      margin-bottom: 0.9rem;
       font-weight: 700;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
 
-    .dot {
-      width: 10px; height: 10px;
-      border-radius: 50%;
-      display: inline-block;
-    }
-
+    .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
     .dot-todo       { background: #94a3b8; }
     .dot-inprogress { background: #f59e0b; }
     .dot-done       { background: #22c55e; }
@@ -83,56 +230,48 @@
       background: #c8cdd6;
       border-radius: 10px;
       padding: 1px 7px;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       margin-left: auto;
     }
 
-    /* Cards */
+    /* ── Cards ── */
     .card {
       background: white;
       border-radius: 8px;
-      padding: 0.9rem 1rem;
-      margin-bottom: 0.75rem;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-      transition: box-shadow 0.15s;
+      padding: 0.85rem;
+      margin-bottom: 0.65rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.07);
     }
 
-    .card:hover { box-shadow: 0 3px 10px rgba(0,0,0,0.12); }
+    .card-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.25rem; }
 
-    .card-title {
-      font-weight: 600;
-      font-size: 0.95rem;
-      margin-bottom: 0.3rem;
-    }
+    .card-desc { font-size: 0.8rem; color: #6b7280; margin-bottom: 0.5rem; line-height: 1.4; }
 
-    .card-desc {
-      font-size: 0.82rem;
-      color: #6b7280;
-      margin-bottom: 0.75rem;
-      line-height: 1.4;
-    }
-
-    .card-actions {
-      display: flex;
-      gap: 0.4rem;
-      flex-wrap: wrap;
-    }
-
-    .card-actions button {
+    .card-assignee {
       font-size: 0.75rem;
-      padding: 0.3rem 0.6rem;
+      color: #4f8ef7;
+      font-weight: 600;
+      margin-bottom: 0.6rem;
     }
 
-    .btn-move  { background: #eff6ff; color: #3b82f6; }
-    .btn-move:hover  { background: #dbeafe; }
+    .card-actions { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+
+    .card-actions button { font-size: 0.72rem; padding: 0.28rem 0.55rem; border-radius: 5px; }
+
+    .btn-move   { background: #eff6ff; color: #3b82f6; }
+    .btn-move:hover   { background: #dbeafe; }
+    .btn-edit   { background: #f0fdf4; color: #16a34a; }
+    .btn-edit:hover   { background: #dcfce7; }
     .btn-delete { background: #fff1f2; color: #ef4444; }
     .btn-delete:hover { background: #fee2e2; }
 
-    /* Modal */
+    .empty { text-align: center; color: #9ca3af; font-size: 0.82rem; padding: 1.5rem 0; }
+
+    /* ── Modal ── */
     .modal-overlay {
       display: none;
       position: fixed; inset: 0;
-      background: rgba(0,0,0,0.4);
+      background: rgba(0,0,0,0.45);
       z-index: 100;
       align-items: center;
       justify-content: center;
@@ -149,80 +288,115 @@
       box-shadow: 0 10px 40px rgba(0,0,0,0.2);
     }
 
-    .modal h2 { margin-bottom: 1rem; font-size: 1.1rem; }
-
-    .modal label {
-      display: block;
-      font-size: 0.85rem;
-      font-weight: 600;
-      margin-bottom: 0.3rem;
-      color: #374151;
-    }
-
-    .modal input,
-    .modal textarea,
-    .modal select {
-      width: 100%;
-      padding: 0.55rem 0.75rem;
-      border: 1px solid #d1d5db;
-      border-radius: 6px;
-      font-size: 0.9rem;
-      margin-bottom: 1rem;
-      font-family: inherit;
-    }
-
-    .modal textarea { resize: vertical; min-height: 80px; }
+    .modal h2 { margin-bottom: 1rem; font-size: 1.05rem; }
 
     .modal-actions {
       display: flex;
       justify-content: flex-end;
       gap: 0.5rem;
-      margin-top: 0.5rem;
+      margin-top: 0.25rem;
     }
 
-    .btn-cancel { background: #f3f4f6; color: #374151; }
+    .btn-cancel { background: #f3f4f6; color: #374151; padding: 0.5rem 1rem; font-size: 0.88rem; }
     .btn-cancel:hover { background: #e5e7eb; }
-    .btn-save   { background: #4f8ef7; color: white; font-weight: 600; }
+    .btn-save   { background: #4f8ef7; color: white; padding: 0.5rem 1rem; font-size: 0.88rem; font-weight: 600; }
     .btn-save:hover { background: #3a7ae0; }
-
-    .empty { text-align: center; color: #9ca3af; font-size: 0.85rem; padding: 2rem 0; }
   </style>
 </head>
 <body>
 
-<header>
-  <h1>📋 TaskBoard</h1>
-  <button id="add-btn">+ New Task</button>
-</header>
+<!-- ── Auth Screen ─────────────────────────────────────────── -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <h1>📋 TaskBoard</h1>
+    <p>Sign in to your workspace</p>
 
-<div class="board">
-  <div class="column" id="col-todo">
-    <div class="column-header">
-      <span class="dot dot-todo"></span> To Do
-      <span class="count" id="count-todo">0</span>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchTab('login')">Login</button>
+      <button class="auth-tab"        onclick="switchTab('register')">Register</button>
     </div>
-    <div class="cards" id="cards-todo"></div>
-  </div>
 
-  <div class="column" id="col-inprogress">
-    <div class="column-header">
-      <span class="dot dot-inprogress"></span> In Progress
-      <span class="count" id="count-inprogress">0</span>
-    </div>
-    <div class="cards" id="cards-inprogress"></div>
-  </div>
+    <div id="auth-error" class="auth-error"></div>
 
-  <div class="column" id="col-done">
-    <div class="column-header">
-      <span class="dot dot-done"></span> Done
-      <span class="count" id="count-done">0</span>
+    <!-- Login -->
+    <div id="tab-login">
+      <label>Email</label>
+      <input type="email" id="login-email" placeholder="you@example.com" />
+      <label>Password</label>
+      <input type="password" id="login-password" placeholder="••••••••" />
+      <button class="btn-primary" onclick="login()">Sign In</button>
     </div>
-    <div class="cards" id="cards-done"></div>
+
+    <!-- Register -->
+    <div id="tab-register" style="display:none">
+      <label>Name</label>
+      <input type="text" id="reg-name" placeholder="Your name" />
+      <label>Email</label>
+      <input type="email" id="reg-email" placeholder="you@example.com" />
+      <label>Password</label>
+      <input type="password" id="reg-password" placeholder="••••••••" />
+      <label>Role</label>
+      <select id="reg-role">
+        <option value="member">Member</option>
+        <option value="lead">Team Lead</option>
+      </select>
+      <button class="btn-primary" onclick="register()">Create Account</button>
+    </div>
   </div>
 </div>
 
-<!-- Modal -->
-<div class="modal-overlay" id="modal">
+<!-- ── App Screen ─────────────────────────────────────────── -->
+<div id="app-screen">
+  <header>
+    <h1>📋 TaskBoard</h1>
+    <span class="user-badge" id="header-name"></span>
+    <span class="role-chip"  id="header-role"></span>
+    <button class="btn-logout" onclick="logout()">Sign out</button>
+  </header>
+
+  <!-- Lead stats -->
+  <div class="stats" id="stats-bar" style="display:none">
+    <div class="stat-card">
+      <div class="num num-todo" id="stat-todo">0</div>
+      <div class="lbl">To Do</div>
+    </div>
+    <div class="stat-card">
+      <div class="num num-inprogress" id="stat-inprogress">0</div>
+      <div class="lbl">In Progress</div>
+    </div>
+    <div class="stat-card">
+      <div class="num num-done" id="stat-done">0</div>
+      <div class="lbl">Done</div>
+    </div>
+    <div class="stat-card">
+      <div class="num" id="stat-members" style="color:#4f8ef7">0</div>
+      <div class="lbl">Team Members</div>
+    </div>
+  </div>
+
+  <div class="board-header">
+    <h2 id="board-title">My Tasks</h2>
+    <button class="btn-new" id="new-task-btn" style="display:none" onclick="openAdd()">+ New Task</button>
+  </div>
+
+  <div class="board">
+    <div class="column">
+      <div class="column-header"><span class="dot dot-todo"></span> To Do <span class="count" id="count-todo">0</span></div>
+      <div id="cards-todo"></div>
+    </div>
+    <div class="column">
+      <div class="column-header"><span class="dot dot-inprogress"></span> In Progress <span class="count" id="count-inprogress">0</span></div>
+      <div id="cards-inprogress"></div>
+    </div>
+    <div class="column">
+      <div class="column-header"><span class="dot dot-done"></span> Done <span class="count" id="count-done">0</span></div>
+      <div id="cards-done"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Task Modal ──────────────────────────────────────────── -->
+<div class="modal-overlay" id="task-modal">
   <div class="modal">
     <h2 id="modal-title">New Task</h2>
     <label>Title</label>
@@ -235,9 +409,15 @@
       <option value="in-progress">In Progress</option>
       <option value="done">Done</option>
     </select>
+    <div id="assign-field">
+      <label>Assign To</label>
+      <select id="input-assignee">
+        <option value="">— Unassigned —</option>
+      </select>
+    </div>
     <div class="modal-actions">
-      <button class="btn-cancel" id="modal-cancel">Cancel</button>
-      <button class="btn-save"   id="modal-save">Save</button>
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save"   onclick="saveTask()">Save</button>
     </div>
   </div>
 </div>
@@ -245,29 +425,145 @@
 <script>
   const API = 'https://project-hail-mary-kf08.onrender.com';
 
+  let token    = sessionStorage.getItem('tb_token');
+  let currentUser = JSON.parse(sessionStorage.getItem('tb_user') || 'null');
+  let members  = [];
   let editingId = null;
 
-  // ── Fetch & render ────────────────────────────────────────
+  // ── Boot ──────────────────────────────────────────────────
+  if (token && currentUser) showApp();
+
+  // ── Auth tab switch ───────────────────────────────────────
+  function switchTab(tab) {
+    document.getElementById('tab-login').style.display    = tab === 'login'    ? '' : 'none';
+    document.getElementById('tab-register').style.display = tab === 'register' ? '' : 'none';
+    document.querySelectorAll('.auth-tab').forEach((el, i) => {
+      el.classList.toggle('active', (tab === 'login') ? i === 0 : i === 1);
+    });
+    setAuthError('');
+  }
+
+  function setAuthError(msg) {
+    const el = document.getElementById('auth-error');
+    el.textContent = msg;
+    el.style.display = msg ? 'block' : 'none';
+  }
+
+  // ── Login ─────────────────────────────────────────────────
+  async function login() {
+    const email    = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    if (!email || !password) return setAuthError('Email and password are required.');
+
+    const res  = await fetch(`${API}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) return setAuthError(data.error || 'Login failed');
+
+    saveSession(data.token, data.user);
+    showApp();
+  }
+
+  // ── Register ──────────────────────────────────────────────
+  async function register() {
+    const name     = document.getElementById('reg-name').value.trim();
+    const email    = document.getElementById('reg-email').value.trim();
+    const password = document.getElementById('reg-password').value;
+    const role     = document.getElementById('reg-role').value;
+    if (!name || !email || !password) return setAuthError('All fields are required.');
+
+    const res  = await fetch(`${API}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password, role }),
+    });
+    const data = await res.json();
+    if (!res.ok) return setAuthError(data.error || 'Registration failed');
+
+    saveSession(data.token, data.user);
+    showApp();
+  }
+
+  function saveSession(t, user) {
+    token = t;
+    currentUser = user;
+    sessionStorage.setItem('tb_token', t);
+    sessionStorage.setItem('tb_user', JSON.stringify(user));
+  }
+
+  function logout() {
+    sessionStorage.clear();
+    token = null; currentUser = null;
+    document.getElementById('auth-screen').style.display = 'flex';
+    document.getElementById('app-screen').style.display  = 'none';
+  }
+
+  // ── Show app ──────────────────────────────────────────────
+  async function showApp() {
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display  = 'block';
+
+    document.getElementById('header-name').textContent = currentUser.name;
+    const roleChip = document.getElementById('header-role');
+    roleChip.textContent = currentUser.role === 'lead' ? '👑 Lead' : 'Member';
+    roleChip.className   = `role-chip ${currentUser.role === 'lead' ? 'role-lead' : 'role-member'}`;
+
+    if (currentUser.role === 'lead') {
+      document.getElementById('stats-bar').style.display   = '';
+      document.getElementById('new-task-btn').style.display = '';
+      document.getElementById('board-title').textContent    = 'All Tasks';
+      document.getElementById('assign-field').style.display = '';
+      await loadMembers();
+    } else {
+      document.getElementById('assign-field').style.display = 'none';
+    }
+
+    loadTasks();
+  }
+
+  // ── Fetch helpers ─────────────────────────────────────────
+  function authHeaders() {
+    return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+  }
+
+  async function loadMembers() {
+    const res  = await fetch(`${API}/api/auth/users`, { headers: authHeaders() });
+    members    = await res.json();
+    const sel  = document.getElementById('input-assignee');
+    sel.innerHTML = '<option value="">— Unassigned —</option>' +
+      members.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+    document.getElementById('stat-members').textContent =
+      members.filter(m => m.role === 'member').length;
+  }
+
+  // ── Load & render tasks ───────────────────────────────────
   async function loadTasks() {
-    const res = await fetch(`${API}/api/tasks`);
+    const res   = await fetch(`${API}/api/tasks`, { headers: authHeaders() });
     const tasks = await res.json();
 
     const cols = { todo: [], 'in-progress': [], done: [] };
-    tasks.forEach(t => {
-      if (cols[t.status] !== undefined) cols[t.status].push(t);
-    });
+    tasks.forEach(t => { if (cols[t.status]) cols[t.status].push(t); });
 
     renderCol('todo',       cols['todo']);
     renderCol('inprogress', cols['in-progress']);
     renderCol('done',       cols['done']);
+
+    if (currentUser.role === 'lead') {
+      document.getElementById('stat-todo').textContent       = cols['todo'].length;
+      document.getElementById('stat-inprogress').textContent = cols['in-progress'].length;
+      document.getElementById('stat-done').textContent       = cols['done'].length;
+    }
   }
 
   function renderCol(key, tasks) {
     const container = document.getElementById(`cards-${key}`);
-    const count     = document.getElementById(`count-${key}`);
-    count.textContent = tasks.length;
+    const countEl   = document.getElementById(`count-${key}`);
+    countEl.textContent = tasks.length;
 
-    if (tasks.length === 0) {
+    if (!tasks.length) {
       container.innerHTML = '<p class="empty">No tasks here</p>';
       return;
     }
@@ -276,10 +572,11 @@
       <div class="card">
         <div class="card-title">${esc(t.title)}</div>
         ${t.description ? `<div class="card-desc">${esc(t.description)}</div>` : ''}
+        ${t.assignee_name ? `<div class="card-assignee">👤 ${esc(t.assignee_name)}</div>` : ''}
         <div class="card-actions">
           ${moveButtons(t)}
-          <button class="btn-move" onclick="openEdit(${t.id})">Edit</button>
-          <button class="btn-delete" onclick="deleteTask(${t.id})">Delete</button>
+          ${currentUser.role === 'lead' ? `<button class="btn-edit" onclick="openEdit(${t.id})">Edit</button>` : ''}
+          ${currentUser.role === 'lead' ? `<button class="btn-delete" onclick="deleteTask(${t.id})">Delete</button>` : ''}
         </div>
       </div>
     `).join('');
@@ -298,7 +595,7 @@
   async function moveTask(id, status) {
     await fetch(`${API}/api/tasks/${id}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders(),
       body: JSON.stringify({ status }),
     });
     loadTasks();
@@ -306,53 +603,53 @@
 
   async function deleteTask(id) {
     if (!confirm('Delete this task?')) return;
-    await fetch(`${API}/api/tasks/${id}`, { method: 'DELETE' });
+    await fetch(`${API}/api/tasks/${id}`, { method: 'DELETE', headers: authHeaders() });
     loadTasks();
   }
 
   // ── Modal ─────────────────────────────────────────────────
   function openAdd() {
     editingId = null;
-    document.getElementById('modal-title').textContent = 'New Task';
-    document.getElementById('input-title').value  = '';
-    document.getElementById('input-desc').value   = '';
-    document.getElementById('input-status').value = 'todo';
-    document.getElementById('modal').classList.add('open');
+    document.getElementById('modal-title').textContent   = 'New Task';
+    document.getElementById('input-title').value         = '';
+    document.getElementById('input-desc').value          = '';
+    document.getElementById('input-status').value        = 'todo';
+    document.getElementById('input-assignee').value      = '';
+    document.getElementById('task-modal').classList.add('open');
   }
 
   async function openEdit(id) {
-    const res  = await fetch(`${API}/api/tasks/${id}`);
+    const res  = await fetch(`${API}/api/tasks/${id}`, { headers: authHeaders() });
     const task = await res.json();
     editingId  = id;
     document.getElementById('modal-title').textContent   = 'Edit Task';
     document.getElementById('input-title').value         = task.title;
     document.getElementById('input-desc').value          = task.description || '';
     document.getElementById('input-status').value        = task.status;
-    document.getElementById('modal').classList.add('open');
+    document.getElementById('input-assignee').value      = task.assigned_to || '';
+    document.getElementById('task-modal').classList.add('open');
   }
 
   function closeModal() {
-    document.getElementById('modal').classList.remove('open');
+    document.getElementById('task-modal').classList.remove('open');
   }
 
   async function saveTask() {
     const title       = document.getElementById('input-title').value.trim();
     const description = document.getElementById('input-desc').value.trim();
     const status      = document.getElementById('input-status').value;
+    const assigned_to = document.getElementById('input-assignee').value || null;
+    if (!title) return alert('Title is required');
 
-    if (!title) { alert('Title is required'); return; }
+    const body = { title, description, status, assigned_to };
 
     if (editingId) {
       await fetch(`${API}/api/tasks/${editingId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, description, status }),
+        method: 'PATCH', headers: authHeaders(), body: JSON.stringify(body),
       });
     } else {
       await fetch(`${API}/api/tasks`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, description, status }),
+        method: 'POST', headers: authHeaders(), body: JSON.stringify(body),
       });
     }
 
@@ -360,19 +657,9 @@
     loadTasks();
   }
 
-  // ── Helpers ───────────────────────────────────────────────
   function esc(str) {
-    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
-
-  // ── Event listeners ───────────────────────────────────────
-  document.getElementById('add-btn').addEventListener('click', openAdd);
-  document.getElementById('modal-cancel').addEventListener('click', closeModal);
-  document.getElementById('modal-save').addEventListener('click', saveTask);
-
-  // ── Init ──────────────────────────────────────────────────
-  loadTasks();
 </script>
-
 </body>
 </html>
