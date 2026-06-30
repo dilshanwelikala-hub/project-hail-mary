@@ -28,6 +28,30 @@ CREATE TABLE IF NOT EXISTS tasks (
 ALTER TABLE tasks ADD COLUMN IF NOT EXISTS assigned_to INT REFERENCES users(id) ON DELETE SET NULL;
 ALTER TABLE tasks ADD COLUMN IF NOT EXISTS created_by  INT REFERENCES users(id) ON DELETE SET NULL;
 
+-- v3: due date, priority
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS due_date  TIMESTAMPTZ;
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS priority  TEXT NOT NULL DEFAULT 'medium'
+  CHECK (priority IN ('low', 'medium', 'high'));
+
+-- Comments
+CREATE TABLE IF NOT EXISTS comments (
+  id         SERIAL PRIMARY KEY,
+  task_id    INT         NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+  user_id    INT         NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  content    TEXT        NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Activity log
+CREATE TABLE IF NOT EXISTS activity_log (
+  id         SERIAL PRIMARY KEY,
+  task_id    INT         NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+  user_id    INT         REFERENCES users(id) ON DELETE SET NULL,
+  action     TEXT        NOT NULL,
+  detail     TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- Auto-update updated_at
 CREATE OR REPLACE FUNCTION set_updated_at()
 RETURNS TRIGGER AS $$
