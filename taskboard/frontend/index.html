@@ -43,6 +43,10 @@
     .role-member { background: #dbeafe; color: #1e40af; }
     .btn-logout { background: rgba(255,255,255,.1); color: white; padding: .35rem .75rem; font-size: .82rem; }
     .btn-logout:hover { background: rgba(255,255,255,.2); }
+    .btn-team { background: rgba(255,255,255,.1); color: white; padding: .35rem .75rem; font-size: .82rem; }
+    .btn-team:hover { background: rgba(255,255,255,.2); }
+    .team-chip { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; border-radius: 6px; padding: .3rem .65rem; font-size: .82rem; cursor: pointer; font-weight: 600; }
+    .team-chip.active { background: #1d4ed8; color: white; border-color: #1d4ed8; }
 
     /* ── Stats ── */
     .stats { display: flex; gap: 1rem; padding: 1.25rem 1.5rem 0; max-width: 1200px; margin: 0 auto; }
@@ -174,6 +178,16 @@
       <label>Email</label>   <input type="email"    id="login-email"    placeholder="you@example.com" />
       <label>Password</label><input type="password" id="login-password" placeholder="••••••••" />
       <button class="btn-primary" onclick="login()">Sign In</button>
+      <p style="text-align:center;margin-top:.75rem"><a href="#" onclick="showForgot()" style="font-size:.82rem;color:#4f8ef7">Forgot password?</a></p>
+    </div>
+
+    <!-- Forgot password -->
+    <div id="tab-forgot" style="display:none">
+      <p style="margin-bottom:1rem;font-size:.85rem;color:#374151">Enter your email and we'll send a reset link.</p>
+      <label>Email</label>
+      <input type="email" id="forgot-email" placeholder="you@example.com" />
+      <button class="btn-primary" onclick="forgotPassword()">Send Reset Link</button>
+      <p style="text-align:center;margin-top:.75rem"><a href="#" onclick="switchTab('login')" style="font-size:.82rem;color:#4f8ef7">← Back to login</a></p>
     </div>
     <div id="tab-register" style="display:none">
       <label>Name</label>    <input type="text"     id="reg-name"     placeholder="Your name" />
@@ -192,8 +206,31 @@
     <h1>📋 TaskBoard</h1>
     <span class="user-badge" id="header-name"></span>
     <span class="role-chip"  id="header-role"></span>
+    <button class="btn-team"   id="team-btn" style="display:none" onclick="toggleTeamPanel()">🏢 Teams</button>
     <button class="btn-logout" onclick="logout()">Sign out</button>
   </header>
+
+  <!-- Team panel -->
+  <div id="team-panel" style="display:none;background:white;border-bottom:1px solid #e5e7eb;padding:1rem 1.5rem;max-width:1200px;margin:0 auto">
+    <div style="display:flex;gap:1rem;align-items:flex-start;flex-wrap:wrap">
+      <div style="flex:1;min-width:220px">
+        <div style="font-weight:700;font-size:.85rem;margin-bottom:.6rem">My Teams</div>
+        <div id="teams-list" style="display:flex;flex-direction:column;gap:.4rem"></div>
+        <div style="margin-top:.75rem;display:flex;gap:.5rem">
+          <input type="text" id="new-team-name" placeholder="New team name…" style="margin:0;flex:1;padding:.45rem .65rem;font-size:.85rem" />
+          <button onclick="createTeam()" style="background:#4f8ef7;color:white;padding:.45rem .85rem;font-size:.82rem;border:none;border-radius:6px;cursor:pointer">Create</button>
+        </div>
+      </div>
+      <div style="flex:1;min-width:220px" id="invite-panel" style="display:none">
+        <div style="font-weight:700;font-size:.85rem;margin-bottom:.6rem">Invite Member</div>
+        <div style="display:flex;gap:.5rem">
+          <input type="email" id="invite-email" placeholder="member@email.com" style="margin:0;flex:1;padding:.45rem .65rem;font-size:.85rem" />
+          <button onclick="sendInvite()" style="background:#22c55e;color:white;padding:.45rem .85rem;font-size:.82rem;border:none;border-radius:6px;cursor:pointer">Invite</button>
+        </div>
+        <div id="invite-msg" style="font-size:.8rem;margin-top:.4rem;color:#16a34a"></div>
+      </div>
+    </div>
+  </div>
 
   <div class="stats" id="stats-bar" style="display:none">
     <div class="stat-card"><div class="num num-todo"    id="stat-todo">0</div><div class="lbl">To Do</div></div>
@@ -335,8 +372,31 @@
   function switchTab(tab) {
     document.getElementById('tab-login').style.display    = tab === 'login'    ? '' : 'none';
     document.getElementById('tab-register').style.display = tab === 'register' ? '' : 'none';
+    document.getElementById('tab-forgot').style.display   = tab === 'forgot'   ? '' : 'none';
     document.querySelectorAll('.auth-tab').forEach((el,i) => el.classList.toggle('active', tab==='login'?i===0:i===1));
     setAuthError('');
+  }
+
+  function showForgot() {
+    document.getElementById('tab-login').style.display    = 'none';
+    document.getElementById('tab-register').style.display = 'none';
+    document.getElementById('tab-forgot').style.display   = '';
+    setAuthError('');
+  }
+
+  async function forgotPassword() {
+    const email = document.getElementById('forgot-email').value.trim();
+    if (!email) return setAuthError('Email is required.');
+    const res  = await fetch(`${API}/api/auth/forgot-password`, {
+      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({email}),
+    });
+    const data = await res.json();
+    setAuthError('');
+    // Show success in place of error div (reuse it with green)
+    const el = document.getElementById('auth-error');
+    el.textContent  = data.message || 'Reset link sent!';
+    el.style.color  = '#16a34a';
+    el.style.display = 'block';
   }
   function setAuthError(msg) { const el=document.getElementById('auth-error'); el.textContent=msg; el.style.display=msg?'block':'none'; }
 
@@ -380,6 +440,7 @@
       document.getElementById('new-task-btn').style.display='';
       document.getElementById('filter-assignee').style.display='';
       document.getElementById('assign-field').style.display='';
+      document.getElementById('team-btn').style.display='';
       await loadMembers();
       loadMemberStats();
     } else {
@@ -616,6 +677,71 @@
 
   function formatAction(action) {
     return {created:'created this task',assigned:'assigned this task',reassigned:'reassigned this task',status_changed:'changed status',commented:'commented'}[action]||action;
+  }
+
+  // ── Teams ──────────────────────────────────────────────────
+  let activeTeamId = null;
+
+  function toggleTeamPanel() {
+    const p = document.getElementById('team-panel');
+    p.style.display = p.style.display === 'none' ? '' : 'none';
+    if (p.style.display !== 'none') loadTeams();
+  }
+
+  async function loadTeams() {
+    const res   = await fetch(`${API}/api/teams`, {headers: authHeaders()});
+    const teams = await res.json();
+    const list  = document.getElementById('teams-list');
+
+    if (!Array.isArray(teams) || !teams.length) {
+      list.innerHTML = '<span style="color:#9ca3af;font-size:.82rem">No teams yet</span>';
+      return;
+    }
+
+    list.innerHTML = teams.map(t => `
+      <div style="display:flex;align-items:center;gap:.4rem">
+        <button class="team-chip ${activeTeamId===t.id?'active':''}" onclick="selectTeam(${t.id},'${esc(t.name)}')">
+          ${esc(t.name)} <span style="opacity:.7;font-weight:400">(${t.member_count})</span>
+        </button>
+        ${t.my_role==='lead' ? `<button onclick="selectTeamForInvite(${t.id})" style="background:#f0fdf4;color:#16a34a;border:none;border-radius:5px;padding:.25rem .5rem;font-size:.75rem;cursor:pointer">+ Invite</button>` : ''}
+      </div>
+    `).join('');
+  }
+
+  function selectTeam(id, name) {
+    activeTeamId = id;
+    document.getElementById('team-btn').textContent = `🏢 ${name}`;
+    loadTeams();
+    loadTasks();
+  }
+
+  function selectTeamForInvite(teamId) {
+    activeTeamId = teamId;
+    document.getElementById('invite-panel').style.display = '';
+    document.getElementById('invite-email').value = '';
+    document.getElementById('invite-msg').textContent = '';
+  }
+
+  async function createTeam() {
+    const name = document.getElementById('new-team-name').value.trim();
+    if (!name) return;
+    const res = await fetch(`${API}/api/teams`, {
+      method: 'POST', headers: authHeaders(), body: JSON.stringify({name}),
+    });
+    if (res.ok) { document.getElementById('new-team-name').value=''; loadTeams(); }
+  }
+
+  async function sendInvite() {
+    const email = document.getElementById('invite-email').value.trim();
+    if (!email || !activeTeamId) return;
+    const res  = await fetch(`${API}/api/teams/${activeTeamId}/invite`, {
+      method: 'POST', headers: authHeaders(), body: JSON.stringify({email}),
+    });
+    const data = await res.json();
+    const msg  = document.getElementById('invite-msg');
+    msg.textContent = data.message || data.error || '';
+    msg.style.color = res.ok ? '#16a34a' : '#ef4444';
+    if (res.ok) document.getElementById('invite-email').value = '';
   }
 
   // ── Helpers ────────────────────────────────────────────────

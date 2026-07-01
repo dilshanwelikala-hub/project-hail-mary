@@ -52,6 +52,48 @@ CREATE TABLE IF NOT EXISTS activity_log (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Password reset tokens
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+  id         SERIAL PRIMARY KEY,
+  user_id    INT         NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token      TEXT        NOT NULL UNIQUE,
+  expires_at TIMESTAMPTZ NOT NULL,
+  used       BOOLEAN     NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Teams
+CREATE TABLE IF NOT EXISTS teams (
+  id         SERIAL PRIMARY KEY,
+  name       TEXT        NOT NULL,
+  created_by INT         REFERENCES users(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Team members (role is per-team)
+CREATE TABLE IF NOT EXISTS team_members (
+  team_id    INT  NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+  user_id    INT  NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  role       TEXT NOT NULL DEFAULT 'member' CHECK (role IN ('lead', 'member')),
+  joined_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (team_id, user_id)
+);
+
+-- Team invites
+CREATE TABLE IF NOT EXISTS invites (
+  id         SERIAL PRIMARY KEY,
+  team_id    INT         NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+  email      TEXT        NOT NULL,
+  token      TEXT        NOT NULL UNIQUE,
+  invited_by INT         REFERENCES users(id) ON DELETE SET NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  used       BOOLEAN     NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Add team_id to tasks
+ALTER TABLE tasks ADD COLUMN IF NOT EXISTS team_id INT REFERENCES teams(id) ON DELETE CASCADE;
+
 -- Auto-update updated_at
 CREATE OR REPLACE FUNCTION set_updated_at()
 RETURNS TRIGGER AS $$

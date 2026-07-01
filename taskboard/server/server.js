@@ -1,8 +1,10 @@
 require('dotenv').config();
-const express = require('express');
-const cors    = require('cors');
+const express  = require('express');
+const cors     = require('cors');
+const crypto   = require('crypto');
 const { pool } = require('./db');
 const { router: authRouter, requireAuth, requireLead } = require('./auth');
+const { sendAssignmentEmail, sendInviteEmail } = require('./email');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -96,8 +98,15 @@ app.post('/api/tasks', requireAuth, requireLead, async (req, res) => {
     const task = result.rows[0];
     await logActivity(task.id, req.user.id, 'created', `Task created with status "${status}"`);
     if (assigned_to) {
-      const u = await pool.query('SELECT name FROM users WHERE id=$1', [assigned_to]);
-      await logActivity(task.id, req.user.id, 'assigned', `Assigned to ${u.rows[0]?.name}`);
+      const u = await pool.query('SELECT name, email FROM users WHERE id=$1', [assigned_to]);
+      if (u.rows.length) {
+        await logActivity(task.id, req.user.id, 'assigned', `Assigned to ${u.rows[0].name}`);
+        await sendAssignmentEmail({
+          toEmail: u.rows[0].email, toName: u.rows[0].name,
+          taskTitle: title, taskDescription: description,
+          assignedBy: req.user.name || 'Team Lead',
+        });
+      }
     }
 
     res.status(201).json(task);
@@ -144,9 +153,18 @@ app.patch('/api/tasks/:id', requireAuth, async (req, res) => {
     // Log meaningful changes
     if (status && status !== task.status)
       await logActivity(task.id, req.user.id, 'status_changed', `${task.status} → ${status}`);
-    if (assigned_to !== undefined && assigned_to !== task.assigned_to) {
-      const u = assigned_to ? await pool.query('SELECT name FROM users WHERE id=$1', [assigned_to]) : null;
-      await logActivity(task.id, req.user.id, 'reassigned', assigned_to ? `Assigned to ${u.rows[0]?.name}` : 'Unassigned');
+    if (assigned_to !== undefined && assigned_to !== task.assigned_to && assigned_to) {
+      const u = await pool.query('SELECT name, email FROM users WHERE id=$1', [assigned_to]);
+      if (u.rows.length) {
+        await logActivity(task.id, req.user.id, 'reassigned', `Assigned to ${u.rows[0].name}`);
+        await sendAssignmentEmail({
+          toEmail: u.rows[0].email, toName: u.rows[0].name,
+          taskTitle: title || task.title, taskDescription: description || task.description,
+          assignedBy: req.user.name || 'Team Lead',
+        });
+      }
+    } else if (assigned_to !== undefined && !assigned_to) {
+      await logActivity(task.id, req.user.id, 'reassigned', 'Unassigned');
     }
 
     res.json(result.rows[0]);
@@ -240,6 +258,168 @@ app.get('/api/stats/members', requireAuth, requireLead, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to fetch member stats' });
+  }
+});
+
+// ── TEAMS ─────────────────────────────────────────────────────
+
+// Create team
+app.post('/api/teams', requireAuth, async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name) return res.status(400).json({ error: 'name is required' });
+    const team = await pool.query(
+      'INSERT INTO teams (name, created_by) VALUES ($1,$2) RETURNING *',
+      [name, req.user.id]
+    );
+    // Creator becomes lead of the team
+    await pool.query(
+      'INSERT INTO team_members (team_id, user_id, role) VALUES ($1,$2,$3)',
+      [team.rows[0].id, req.user.id, 'lead']
+    );
+    res.status(201).json(team.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to create team' });
+  }
+});
+
+// Get my teams
+app.get('/api/teams', requireAuth, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT t.*, tm.role AS my_role,
+        (SELECT COUNT(*) FROM team_members WHERE team_id=t.id) AS member_count
+      FROM teams t
+      JOIN team_members tm ON tm.team_id=t.id AND tm.user_id=$1
+      ORDER BY t.created_at DESC
+    `, [req.user.id]);
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch teams' });
+  }
+});
+
+// Get team members
+app.get('/api/teams/:id/members', requireAuth, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT u.id, u.name, u.email, tm.role, tm.joined_at
+      FROM team_members tm
+      JOIN users u ON u.id=tm.user_id
+      WHERE tm.team_id=$1
+      ORDER BY u.name
+    `, [req.params.id]);
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch members' });
+  }
+});
+
+// Invite member by email
+app.post('/api/teams/:id/invite', requireAuth, async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'email is required' });
+
+    // Check requester is lead of this team
+    const membership = await pool.query(
+      'SELECT role FROM team_members WHERE team_id=$1 AND user_id=$2',
+      [req.params.id, req.user.id]
+    );
+    if (!membership.rows.length || membership.rows[0].role !== 'lead')
+      return res.status(403).json({ error: 'Only team leads can invite members' });
+
+    // Check not already a member
+    const existing = await pool.query(
+      'SELECT u.id FROM users u JOIN team_members tm ON tm.user_id=u.id WHERE u.email=$1 AND tm.team_id=$2',
+      [email, req.params.id]
+    );
+    if (existing.rows.length) return res.status(409).json({ error: 'User is already a team member' });
+
+    const team  = await pool.query('SELECT name FROM teams WHERE id=$1', [req.params.id]);
+    const token = crypto.randomBytes(32).toString('hex');
+    const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+    await pool.query(
+      'INSERT INTO invites (team_id,email,token,invited_by,expires_at) VALUES ($1,$2,$3,$4,$5)',
+      [req.params.id, email, token, req.user.id, expires]
+    );
+
+    const inviter = await pool.query('SELECT name FROM users WHERE id=$1', [req.user.id]);
+    await sendInviteEmail({
+      toEmail: email, teamName: team.rows[0].name,
+      invitedBy: inviter.rows[0].name, inviteToken: token,
+    });
+
+    res.json({ message: `Invite sent to ${email}` });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to send invite' });
+  }
+});
+
+// Validate invite token
+app.get('/api/invite/:token', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT i.*, t.name AS team_name
+      FROM invites i JOIN teams t ON t.id=i.team_id
+      WHERE i.token=$1 AND i.used=FALSE AND i.expires_at > NOW()
+    `, [req.params.token]);
+    if (!result.rows.length) return res.status(400).json({ error: 'Invalid or expired invite' });
+    const inv = result.rows[0];
+    res.json({ email: inv.email, teamName: inv.team_name, teamId: inv.team_id });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to validate invite' });
+  }
+});
+
+// Accept invite (register + join team)
+app.post('/api/invite/:token/accept', async (req, res) => {
+  try {
+    const { name, password } = req.body;
+    if (!name || !password) return res.status(400).json({ error: 'name and password are required' });
+
+    const invResult = await pool.query(`
+      SELECT * FROM invites WHERE token=$1 AND used=FALSE AND expires_at > NOW()
+    `, [req.params.token]);
+    if (!invResult.rows.length) return res.status(400).json({ error: 'Invalid or expired invite' });
+    const invite = invResult.rows[0];
+
+    // Register or find user
+    let user;
+    const existing = await pool.query('SELECT * FROM users WHERE email=$1', [invite.email]);
+    if (existing.rows.length) {
+      user = existing.rows[0];
+    } else {
+      const password_hash = await bcrypt.hash(password, 10);
+      const created = await pool.query(
+        'INSERT INTO users (name,email,password_hash,role) VALUES ($1,$2,$3,$4) RETURNING *',
+        [name, invite.email, password_hash, 'member']
+      );
+      user = created.rows[0];
+    }
+
+    // Add to team
+    await pool.query(
+      'INSERT INTO team_members (team_id,user_id,role) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING',
+      [invite.team_id, user.id, 'member']
+    );
+
+    // Mark invite used
+    await pool.query('UPDATE invites SET used=TRUE WHERE id=$1', [invite.id]);
+
+    const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
+    const jwt = require('jsonwebtoken');
+    const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+    res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to accept invite' });
   }
 });
 
